@@ -1,20 +1,17 @@
-* Abstract
-* Introduction
-
 * L-Systems
   #+begin_src R :tangle lsystem.r
-    lsystem  <- function(alphabet, axiom, prods) {
-    
+    lsystem  <- function(alphabet, axiom, productions) {
+
         derivation  <- function(axiom, new_word) {
             a <- substring(axiom,1,1)
             if (a  == "") {
                 new_word
             } else derivation(substring(axiom,2),
                               paste(new_word,
-                                    prods[a],
+                                    productions[a],
                                     sep=""))
         }
-    
+
         derive_n  <- function(axiom, n) {
             if (n == 0) {
                 axiom
@@ -27,13 +24,13 @@
         }
     }
 
-    lsystem_iter <- function(alphabet, axiom, prods) {
+    lsystem_iter <- function(alphabet, axiom, productions) {
         function(n) {
             new_word <- ""
             while (n > 0) {
                 for (char in as.list(strsplit(axiom,""))[[1]]) {
                     new_word  <- paste(new_word,
-                                       prods[char],
+                                       productions[char],
                                        sep="")
                 }
                 n <- n - 1
@@ -44,86 +41,7 @@
         }
     }
 
-    lsystem_derivation  <- function(axiom, prods, new_word) {
-        a <- substring(axiom,1,1)
-        if (a  == "") {
-            new_word
-        } else lsystem_derivation(substring(axiom,2),
-                                  prods,
-                                  paste(new_word,
-                                        find_production(a,prods),
-                                        sep=""))
-    }
-
-    lsystem_derivation_iter <- function(axiom, prods, new_word) {
-        for (x in as.list(strsplit(axiom,""))[[1]]) {
-            new_word  <- paste(new_word,
-                               find_production(x, prods),
-                               sep="")
-        }
-        new_word
-    }
-
-    lsystem_with_dict <- function(axiom, dict, n) {
-        new_word <- ""
-        while (n > 0) {
-        
-            for (char in as.list(strsplit(axiom,""))[[1]]) {
-                new_word  <- paste(new_word,
-                                   prodict[char],
-                                   sep="")
-            }
-            n <- n - 1
-            axiom <- new_word
-            new_word <- ""
-        }
-        axiom
-    }
-
-
-
-
-    find_production <- function(char,prods) {
-        if (length(prods) == 0) {
-            char
-        } else  if (char == prods[[1]][1]) {
-            prods[[1]][2]
-        } else find_production(char,prods[-1])
-    }
-
-    lsystem_derive_n_iter  <- function(axiom, prods, new_word, n) {
-        while (n > 0) {
-            axiom <- lsystem_derivation_iter(axiom, prods, "")
-            n  <- n - 1
-        }
-        axiom
-    }
-
-
-    lsystem_derive_n  <- function(axiom, prods, new_word, n) {
-        if (n == 0) {
-            axiom
-        } else lsystem_derive_n(lsystem_derivation(axiom, prods, ""), prods, "", n - 1)
-    }
-
-    lsystem_derive_n_with_iter  <- function(axiom, prods, new_word, n) {
-        if (n == 0) {
-            axiom
-        } else lsystem_derive_n_with_iter(lsystem_derivation_iter(axiom, prods, ""), prods, "", n - 1)
-    }
-                                            #trace(lsystem_derivation, tracer = quote(cxoat(sprintf("tracing pt(*, ncp = %.15g)\n", ncp))),print = FALSE)
-
-    find_with_prods <- function(prods) {
-        function(char) {
-            find_production(char,prods)
-        }
-    }
-
-
-
   #+end_src
-* The Turtle InterpreteR
-* Some Flowers
 * config :noexport:
 #+PROPERTY: :eval never-export
 #+LANGUAGE:  de
@@ -149,11 +67,11 @@
 #+LATEX_HEADER: \addtokomafont{pagenumber}{\small \sffamily}
 #+LATEX_HEADER: \setkomafont{author}{\sffamily}
 #+LATEX_HEADER: \setkomafont{date}{\sffamily}
-#+LATEX_HEADER: \author{Alexander Ptok \\ 9624740}
+#+LATEX_HEADER: \author{Alexander Ptok}
 #+LATEX_HEADER: \usepackage{scrlayer-scrpage}
 #+LATEX_HEADER: \pagestyle{scrheadings}
 #+LATEX_HEADER: \lohead{Alexander Ptok}
-#+LATEX_HEADER: \cohead{Matrklnr.:9624740}
+#+LATEX_HEADER: \cohead{$\lambda$}
 #+LATEX_HEADER: \rohead{\today}
 #+LATEX_HEADER: \lofoot{}
 #+LATEX_HEADER: \cofoot{\thepage\ von \pageref{LastPage}}
