@@ -1,0 +1,165 @@
+* Abstract
+* Introduction
+
+* L-Systems
+  #+begin_src R :tangle lsystem.r
+    lsystem  <- function(alphabet, axiom, prods) {
+    
+        derivation  <- function(axiom, new_word) {
+            a <- substring(axiom,1,1)
+            if (a  == "") {
+                new_word
+            } else derivation(substring(axiom,2),
+                              paste(new_word,
+                                    prods[a],
+                                    sep=""))
+        }
+    
+        derive_n  <- function(axiom, n) {
+            if (n == 0) {
+                axiom
+            } else derive_n(derivation(axiom, ""),
+                            n - 1)
+        }
+
+        function(n) {
+            derive_n(axiom, n)
+        }
+    }
+
+    lsystem_iter <- function(alphabet, axiom, prods) {
+        function(n) {
+            new_word <- ""
+            while (n > 0) {
+                for (char in as.list(strsplit(axiom,""))[[1]]) {
+                    new_word  <- paste(new_word,
+                                       prods[char],
+                                       sep="")
+                }
+                n <- n - 1
+                axiom <- new_word
+                new_word <- ""
+            }
+            axiom
+        }
+    }
+
+    lsystem_derivation  <- function(axiom, prods, new_word) {
+        a <- substring(axiom,1,1)
+        if (a  == "") {
+            new_word
+        } else lsystem_derivation(substring(axiom,2),
+                                  prods,
+                                  paste(new_word,
+                                        find_production(a,prods),
+                                        sep=""))
+    }
+
+    lsystem_derivation_iter <- function(axiom, prods, new_word) {
+        for (x in as.list(strsplit(axiom,""))[[1]]) {
+            new_word  <- paste(new_word,
+                               find_production(x, prods),
+                               sep="")
+        }
+        new_word
+    }
+
+    lsystem_with_dict <- function(axiom, dict, n) {
+        new_word <- ""
+        while (n > 0) {
+        
+            for (char in as.list(strsplit(axiom,""))[[1]]) {
+                new_word  <- paste(new_word,
+                                   prodict[char],
+                                   sep="")
+            }
+            n <- n - 1
+            axiom <- new_word
+            new_word <- ""
+        }
+        axiom
+    }
+
+
+
+
+    find_production <- function(char,prods) {
+        if (length(prods) == 0) {
+            char
+        } else  if (char == prods[[1]][1]) {
+            prods[[1]][2]
+        } else find_production(char,prods[-1])
+    }
+
+    lsystem_derive_n_iter  <- function(axiom, prods, new_word, n) {
+        while (n > 0) {
+            axiom <- lsystem_derivation_iter(axiom, prods, "")
+            n  <- n - 1
+        }
+        axiom
+    }
+
+
+    lsystem_derive_n  <- function(axiom, prods, new_word, n) {
+        if (n == 0) {
+            axiom
+        } else lsystem_derive_n(lsystem_derivation(axiom, prods, ""), prods, "", n - 1)
+    }
+
+    lsystem_derive_n_with_iter  <- function(axiom, prods, new_word, n) {
+        if (n == 0) {
+            axiom
+        } else lsystem_derive_n_with_iter(lsystem_derivation_iter(axiom, prods, ""), prods, "", n - 1)
+    }
+                                            #trace(lsystem_derivation, tracer = quote(cxoat(sprintf("tracing pt(*, ncp = %.15g)\n", ncp))),print = FALSE)
+
+    find_with_prods <- function(prods) {
+        function(char) {
+            find_production(char,prods)
+        }
+    }
+
+
+
+  #+end_src
+* The Turtle InterpreteR
+* Some Flowers
+* config :noexport:
+#+PROPERTY: :eval never-export
+#+LANGUAGE:  de
+#+TITLE: L-Systems in R
+#+OPTIONS:   H:4 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LaTeX_CLASS: scrartcl
+#+LaTeX_CLASS_OPTIONS: [hidelinks,12pt,a4paper,titlepage]
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{lastpage}
+#+LATEX_HEADER: \usepackage{fontspec}
+#+LATEX_HEADER: \usepackage{unicode-math}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \newfontfamily\listingsfont[Scale=0.85]{FreeSans.ttf}
+#+LATEX_HEADER: \lstset{basicstyle=\footnotesize\ttfamily, breaklines=true, frame=single, keywordstyle=\listingsfont\bfseries, stringstyle=\ttfamily, commentstyle=\ttfamily, showstringspaces=false}
+#+LATEX_HEADER: \usepackage[ngerman]{babel}
+#+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
+;;#+LATEX_HEADER: \setmathfont{XITS Math}
+#+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
+#+LATEX_HEADER: \addtokomafont{pagenumber}{\small \sffamily}
+#+LATEX_HEADER: \setkomafont{author}{\sffamily}
+#+LATEX_HEADER: \setkomafont{date}{\sffamily}
+#+LATEX_HEADER: \author{Alexander Ptok \\ 9624740}
+#+LATEX_HEADER: \usepackage{scrlayer-scrpage}
+#+LATEX_HEADER: \pagestyle{scrheadings}
+#+LATEX_HEADER: \lohead{Alexander Ptok}
+#+LATEX_HEADER: \cohead{Matrklnr.:9624740}
+#+LATEX_HEADER: \rohead{\today}
+#+LATEX_HEADER: \lofoot{}
+#+LATEX_HEADER: \cofoot{\thepage\ von \pageref{LastPage}}
+#+LATEX_HEADER: \rofoot{}
+#+LATEX_HEADER: \setheadsepline{0.4pt}
+#+LATEX_HEADER: \usepackage{lastpage}
+#+LATEX_HEADER: \RequirePackage{fancyvrb}
+#+LATEX_HEADER: \DefineVerbatimEnvironment{verbatim}{Verbatim}{fontsize=\scriptsize}
+
