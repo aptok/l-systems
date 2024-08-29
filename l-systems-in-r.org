@@ -42,6 +42,9 @@
     }
 
   #+end_src
+
+  #+RESULTS:
+
 * The Turtle Interpreter
   #+begin_src R :tangle turtle.r
     turtle <- function(x, y, alpha, stepsize, delta) {
@@ -98,7 +101,27 @@
         }
     }
   #+end_src
-  #+begin_src r :tangle plotting-turtle.r
+
+  #+RESULTS:
+  #+begin_src R :tangle turtle-plot.r
+    turtle_plot <- function(name, n, delta, alphabet, axiom, dict) {
+        l <- lsystem_iter(alphabet, axiom, dict)
+        ln <- gsub("R|L", "F", l(n))
+        t <- turtle(0,0,pi,1, delta)
+        lines <- t(ln)
+        png(name, width=800, height=800)
+        plot(range(x=c(lines$x1,lines$x2)),
+             y=range(c(lines$y1,lines$y2)),
+             type="n",
+             ann=FALSE,
+             axes=FALSE)
+        draw_turtle_iter(lines)
+        dev.off()
+    }
+  #+end_src
+
+
+  #+begin_src R :tangle plotting-turtle.r
     plotting_turtle <- function(x, y, alpha, stepsize, delta) {
 
         forward <- function() {
@@ -142,6 +165,9 @@
     }
 
   #+end_src
+
+  #+RESULTS:
+
   #+begin_src R :tangle draw-turtle.r
     draw_turtle <- function(lines) {
         if (length(lines$x1) == 0) {
@@ -163,39 +189,67 @@
     }
   #+end_src
 
+  #+RESULTS:
+
 * The Koch Curve
-  #+begin_src R :tangle koch-curve.r
+  #+begin_src R :tangle koch-curve.r :eval yes
     source("lsystem.r")
     source("turtle.r")
     source("draw-turtle.r")
     dict <- c("F" = "F-F+F+FF-F-F+F", "+" = "+", "-" = "-", "f" = "f")
-    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (3))
-    t <- turtle(0.8,0.2,pi,0.03,pi/2)
+    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (4))
+    t <- turtle(0,0,pi,0.03,pi/2)
     lines <- t(l)
-    png("koch.png", width=480, height=480)
+    png("koch.png", width=1000, height=1000)
     plot(range(x=c(lines$x1,lines$x2)),y=range(c(lines$y1,lines$y2)),type="n", ann=FALSE, axes=FALSE)
     draw_turtle_iter(lines)
     dev.off() 
   #+end_src
+
+  #+RESULTS:
+  : 1
 
 [[file:koch.png]]
 
 * More Curves
-  #+begin_src R :tangle more-curves.r
+  #+begin_src R :tangle more-curves.r :eval query-export
     source("lsystem.r")
     source("turtle.r")
     source("draw-turtle.r")
     dict <- c("F" = "FF-F-F-F-F-F+F", "+" = "+", "-" = "-", "f" = "f")
-    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (3))
-    t <- turtle(0.8,0.2,pi,0.03,pi/2)
+    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (4))
+    t <- turtle(0,0,pi,1,pi/2)
     lines <- t(l)
-    png("more-curves-a.png", width=480, height=480)
-    plot(range(x=c(lines$x1,lines$x2)),y=range(c(lines$y1,lines$y2)),type="n", ann=FALSE, axes=FALSE)
+    png("more-curves-a.png", width=1000, height=1000)
+    plot(x=range(x=c(lines$x1,lines$x2)),
+         y=range(c(lines$y1,lines$y2)),
+         type="n", ann=FALSE, axes=FALSE)
     draw_turtle_iter(lines)
     dev.off() 
   #+end_src
 
+  #+RESULTS:
+  : 1
+#+CAPTION: More Curves
 [[file:more-curves-a.png]]
+
+#+begin_src R :tangel more-curves.r :eval query-export
+  source("lsystem.r")
+  source("turtle.r")
+  source("draw-turtle.r")
+  source("turtle-plot.r")
+  turtle_plot("sierpinski-gasket.png",
+              6,
+              pi/3,
+              "RL+-",
+              "R",
+              c("L" = "R+L+R",
+                "R" = "L-R-L",
+                "+" = "+",
+                "-" = "-",
+                "f" = "f"))
+#+end_src
+
 
 * config :noexport:
 #+PROPERTY: :eval never-export
@@ -216,9 +270,9 @@
 #+LATEX_HEADER: \newfontfamily\listingsfont[Scale=0.85]{FreeSans.ttf}
 #+LATEX_HEADER: \lstset{basicstyle=\footnotesize\ttfamily, breaklines=true, frame=single, keywordstyle=\listingsfont\bfseries, stringstyle=\ttfamily, commentstyle=\ttfamily, showstringspaces=false}
 #+LATEX_HEADER: \usepackage[ngerman]{babel}
-#+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
+##+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
 ;;#+LATEX_HEADER: \setmathfont{XITS Math}
-#+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
+##+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
 #+LATEX_HEADER: \addtokomafont{pagenumber}{\small \sffamily}
 #+LATEX_HEADER: \setkomafont{author}{\sffamily}
 #+LATEX_HEADER: \setkomafont{date}{\sffamily}
