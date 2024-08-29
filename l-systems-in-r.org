@@ -85,11 +85,54 @@
         }
 
         iter_over_nu <- function(nu) {
-            while (nu != "") {
-                function_table[[substring(nu,1,1)]]()
-                nu <- substring(nu,2)
-            }
+
+            for (i in 1:nchar(nu)) {
+                function_table[[substring(nu,i,i)]]()
+                }
             linesxy
+        }
+
+        function(nu) {
+          # rec_over_nu(nu)
+            iter_over_nu(nu)
+        }
+    }
+  #+end_src
+  #+begin_src r :tangle plotting-turtle.r
+    plotting_turtle <- function(x, y, alpha, stepsize, delta) {
+
+        forward <- function() {
+            x <<- x + stepsize * cos(alpha)
+            y <<- y + stepsize * sin(alpha)
+        }
+
+        forward_draw <- function() {
+            x1 <- x
+            y1 <- y
+            x <<- x + stepsize * cos(alpha)
+            y <<- y + stepsize * sin(alpha)
+            lines(c(x1,x),c(y1,y))
+        }
+
+        turn_right <- function() {
+            alpha <<- alpha - delta
+        }
+
+        turn_left <- function() {
+            alpha <<- alpha + delta
+        }
+
+        function_table <-
+            list("F" = forward_draw,
+                 "f" = forward,
+                 "-" = turn_right,
+                 "+" = turn_left)
+
+        iter_over_nu <- function(nu) {
+
+            for (i in 1:nchar(nu)) {
+                function_table[[substring(nu,i,i)]]()
+            }
         }
 
         function(nu) {
@@ -97,8 +140,8 @@
             iter_over_nu(nu)
         }
     }
-  #+end_src
 
+  #+end_src
   #+begin_src R :tangle draw-turtle.r
     draw_turtle <- function(lines) {
         if (length(lines$x1) == 0) {
@@ -114,12 +157,8 @@
 
 
     draw_turtle_iter <- function(lines) {
-        while (length(lines$x1) != 0) {
-            lines(x=c(lines$x1[1], lines$x2[1]), y=c(lines$y1[1], lines$y2[1]))
-            lines$x1 <- lines$x1[-1]
-            lines$x2 <- lines$x2[-1]
-            lines$y1 <- lines$y1[-1]
-            lines$y2 <- lines$y2[-1]
+        for (i in 1:length(lines$x1)) {
+            lines(x=c(lines$x1[i], lines$x2[i]), y=c(lines$y1[i], lines$y2[i]))
         }
     }
   #+end_src
@@ -130,12 +169,34 @@
     source("turtle.r")
     source("draw-turtle.r")
     dict <- c("F" = "F-F+F+FF-F-F+F", "+" = "+", "-" = "-", "f" = "f")
-    plot.new()
-    draw_turtle_iter(
-        turtle(0.5,0.5,pi,.006,0.5*pi)
-        (lsystem_iter("Ff+-", "F-F-F-F", dict)
-            (2)))
+    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (3))
+    t <- turtle(0.8,0.2,pi,0.03,pi/2)
+    lines <- t(l)
+    png("koch.png", width=480, height=480)
+    plot(range(x=c(lines$x1,lines$x2)),y=range(c(lines$y1,lines$y2)),type="n", ann=FALSE, axes=FALSE)
+    draw_turtle_iter(lines)
+    dev.off() 
   #+end_src
+
+[[file:koch.png]]
+
+* More Curves
+  #+begin_src R :tangle more-curves.r
+    source("lsystem.r")
+    source("turtle.r")
+    source("draw-turtle.r")
+    dict <- c("F" = "FF-F-F-F-F-F+F", "+" = "+", "-" = "-", "f" = "f")
+    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (3))
+    t <- turtle(0.8,0.2,pi,0.03,pi/2)
+    lines <- t(l)
+    png("more-curves-a.png", width=480, height=480)
+    plot(range(x=c(lines$x1,lines$x2)),y=range(c(lines$y1,lines$y2)),type="n", ann=FALSE, axes=FALSE)
+    draw_turtle_iter(lines)
+    dev.off() 
+  #+end_src
+
+[[file:more-curves-a.png]]
+
 * config :noexport:
 #+PROPERTY: :eval never-export
 #+LANGUAGE:  de

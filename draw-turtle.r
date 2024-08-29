@@ -12,11 +12,7 @@ draw_turtle <- function(lines) {
 
 
 draw_turtle_iter <- function(lines) {
-    while (length(lines$x1) != 0) {
-        lines(x=c(lines$x1[1], lines$x2[1]), y=c(lines$y1[1], lines$y2[1]))
-        lines$x1 <- lines$x1[-1]
-        lines$x2 <- lines$x2[-1]
-        lines$y1 <- lines$y1[-1]
-        lines$y2 <- lines$y2[-1]
+    for (i in 1:length(lines$x1)) {
+        lines(x=c(lines$x1[i], lines$x2[i]), y=c(lines$y1[i], lines$y2[i]))
     }
 }

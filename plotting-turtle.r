@@ -1,4 +1,4 @@
-turtle <- function(x, y, alpha, stepsize, delta) {
+plotting_turtle <- function(x, y, alpha, stepsize, delta) {
 
     forward <- function() {
         x <<- x + stepsize * cos(alpha)
@@ -6,11 +6,11 @@ turtle <- function(x, y, alpha, stepsize, delta) {
     }
 
     forward_draw <- function() {
-        linesxy$x1 <<- c(x, linesxy$x1)
-        linesxy$y1 <<- c(y, linesxy$y1)
-        forward()
-        linesxy$x2 <<- c(x, linesxy$x2)
-        linesxy$y2 <<- c(y, linesxy$y2)
+        x1 <- x
+        y1 <- y
+        x <<- x + stepsize * cos(alpha)
+        y <<- y + stepsize * sin(alpha)
+        lines(c(x1,x),c(y1,y))
     }
 
     turn_right <- function() {
@@ -21,33 +21,21 @@ turtle <- function(x, y, alpha, stepsize, delta) {
         alpha <<- alpha + delta
     }
 
-    linesxy <- list(x1=c(),x2=c(),y1=c(),y2=c())
-
     function_table <-
         list("F" = forward_draw,
              "f" = forward,
              "-" = turn_right,
              "+" = turn_left)
 
-    rec_over_nu <- function(nu) {
-        if (nu == "") {
-            linesxy
-        } else {
-            function_table[[substring(nu,1,1)]]()
-            rec_over_nu(substring(nu,2))
-        }
-    }
-
     iter_over_nu <- function(nu) {
 
         for (i in 1:nchar(nu)) {
             function_table[[substring(nu,i,i)]]()
-            }
-        linesxy
+        }
     }
 
     function(nu) {
-      # rec_over_nu(nu)
+                                        # rec_over_nu(nu)
         iter_over_nu(nu)
     }
 }
