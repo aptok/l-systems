@@ -1,4 +1,6 @@
 * L-Systems
+[cite/s/v:@Prusinkiewicz1990-ht]. 
+
   #+begin_src R :tangle lsystem.r
     lsystem  <- function(alphabet, axiom, productions) {
 
@@ -42,6 +44,7 @@
     }
 
   #+end_src
+
 * The Turtle Interpreter
   #+begin_src R :tangle turtle.r
     turtle <- function(x, y, alpha, stepsize, delta) {
@@ -136,6 +139,11 @@
         (lsystem_iter("Ff+-", "F-F-F-F", dict)
             (2)))
   #+end_src
+* Links
+[[http://algorithmicbotany.org]] 
+
+* Literature
+#+print_bibliography:
 * config :noexport:
 #+PROPERTY: :eval never-export
 #+LANGUAGE:  de
@@ -155,9 +163,9 @@
 #+LATEX_HEADER: \newfontfamily\listingsfont[Scale=0.85]{FreeSans.ttf}
 #+LATEX_HEADER: \lstset{basicstyle=\footnotesize\ttfamily, breaklines=true, frame=single, keywordstyle=\listingsfont\bfseries, stringstyle=\ttfamily, commentstyle=\ttfamily, showstringspaces=false}
 #+LATEX_HEADER: \usepackage[ngerman]{babel}
-#+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
+##+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
 ;;#+LATEX_HEADER: \setmathfont{XITS Math}
-#+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
+##+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
 #+LATEX_HEADER: \addtokomafont{pagenumber}{\small \sffamily}
 #+LATEX_HEADER: \setkomafont{author}{\sffamily}
 #+LATEX_HEADER: \setkomafont{date}{\sffamily}
@@ -174,4 +182,4 @@
 #+LATEX_HEADER: \usepackage{lastpage}
 #+LATEX_HEADER: \RequirePackage{fancyvrb}
 #+LATEX_HEADER: \DefineVerbatimEnvironment{verbatim}{Verbatim}{fontsize=\scriptsize}
-
+#+bibliography: l-systems-in-r.bib
