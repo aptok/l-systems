@@ -5,4 +5,4 @@
 *.out
 .#*
 .RData
-.*ttf
+*ttf

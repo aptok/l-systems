@@ -2,149 +2,61 @@
 The motivation was to try out the programming patterns teached in TLS
 to reproduce the image in TABOP. To do this [[https://www.r-project.org/][R]] was the choosen
 programming language.
+
+
 * L-Systems
-  #+begin_src R :tangle lsystem.r
-    lsystem  <- function(alphabet, axiom, productions) {
+First we implmented DOL-Systems with natural recursions.
 
-        derivation  <- function(axiom, new_word) {
-            a <- substring(axiom,1,1)
-            if (a  == "") {
-                new_word
-            } else derivation(substring(axiom,2),
-                              paste(new_word,
-                                    productions[a],
-                                    sep=""))
-        }
+#+begin_src R :tangle lsystem-rec.r :eval no
+  lsystem_rec  <- function(alphabet, axiom, productions) {
 
-        derive_n  <- function(axiom, n) {
-            if (n == 0) {
-                axiom
-            } else derive_n(derivation(axiom, ""),
-                            n - 1)
-        }
-
-        function(n) {
-            derive_n(axiom, n)
-        }
-    }
-
-    lsystem_iter <- function(alphabet, axiom, productions) {
-        function(n) {
-            new_word <- ""
-            while (n > 0) {
-                for (char in as.list(strsplit(axiom,""))[[1]]) {
-                    new_word  <- paste(new_word,
-                                       productions[char],
-                                       sep="")
-                }
-                n <- n - 1
-                axiom <- new_word
-                new_word <- ""
-            }
-            axiom
-        }
-    }
-
-  #+end_src
-  #+begin_src R :tangle lsystem-with-subscripts.r
-    lsystem  <- function(alphabet, axiom, productions) {
-
-      derivation  <- function(axiom, new_word) {
-        a <- substring(axiom,1,1)
-        b <- substring(axiom,2,2)
-        c <- substring(axiom,3,3)
-        if (a  == "") {
-          new_word
-        } else if (b == "_") {
-          derivation(substring(axiom,4),
-                     paste(new_word,
-                           productions[paste(a,b,c,sep="")],
-                           sep=""))
-        }
-        else derivation(substring(axiom,2),
+    derivation  <- function(axiom, new_word) {
+      a <- substring(axiom,1,1)
+      if (a  == "") {
+        new_word
+      } else derivation(substring(axiom,2),
                         paste(new_word,
                               productions[a],
                               sep=""))
-      }
-
-      derive_n  <- function(axiom, n) {
-        if (n == 0) {
-          axiom
-        } else derive_n(derivation(axiom, ""),
-                        n - 1)
-      }
-
-      function(n) {
-        derive_n(axiom, n)
-      }
     }
 
-    symbols_in_nu <- function(nu, symlist) {
-        a <- substring(nu,1,1)
-        b <- substring(nu,2,2)
-        c <- substring(nu,3,3)
-
-        if (a == "") {
-          symlist
-        } else if (b == "_") {
-          symbols_in_nu(substring(nu,4),
-                        c(paste(a,b,c,sep=""), symlist))
-        } else {
-          symbols_in_nu(substring(nu,2),
-                        c(a, symlist))
-        }
-    }
-
-
-    symbols_in_nu_iter <- function(nu) {
-      symlist <- c()
-      for (i in 1:nchar(nu)) {
-        a <- substring(nu,i,i)
-        b <- substring(nu,i + 1,i + 1)
-        c <- substring(nu,i + 2,i + 2)
-        if (b == "_") {
-          symlist <- c(paste(a,b,c,sep=""), symlist)
-          nu <- paste(substring(nu,0,i), substring(nu,i + 3), sep="")
-        } else {
-          symlist <- c(a, symlist)
-        }
-      }
-      rev(symlist[symlist != ""])
-    }
-
-
-
-    lsystem_iter <- function(alphabet, axiom, productions) {
-      function(n) {
-        new_word <- ""
-        while (n > 0) {
-          for (symbol in symbols_in_nu_iter(axiom)) {
-            new_word  <- paste(new_word,
-                               productions[symbol],
-                               sep="")
-          }
-          n <- n - 1
-          axiom <- new_word
-          new_word <- ""
-        }
+    derive_n  <- function(axiom, n) {
+      if (n == 0) {
         axiom
-      }
+      } else derive_n(derivation(axiom, ""),
+                      n - 1)
     }
 
-  #+end_src
+    function(n) {
+      derive_n(axiom, n)
+    }
+  }
+  
+#+end_src
+\newpage
+* Turtle
+The function turtle gives back a closure. A closure is a poor mans
+object. You can give the function returned by turtle a character as
+argument, like sending a message to an object. The ~<<-~ operator
+assigns the variable on the right not in the namespace of the function
+but one level up, in the namespace of the closure.
 
-  #+RESULTS:
+First we set some variables that compose the context of the returned
+function. 
 
-* The Turtle Interpreter
-  #+begin_src R :tangle turtle.r
+#+begin_src R :tangle lsystem-rec.r :eval no
     turtle <- function(x, y, alpha, stepsize, delta) {
 
       x_orig <- x
       y_orig <- y
       alpha_orig <- alpha
+      ret <- list(x1=c(),x2=c(),y1=c(),y2=c())
+#+end_src
 
+Than we define some methods as functions.
+#+begin_src R :tangle lsystem-rec.r :eval no
       reset <- function() {
-        linesxy <<- list(x1=c(),x2=c(),y1=c(),y2=c())
+        ret <<- list(x1=c(),x2=c(),y1=c(),y2=c())
         x <<- x_orig
         y <<- y_orig
         alpha <<- alpha_orig
@@ -156,11 +68,11 @@ programming language.
       }
 
       forward_draw <- function() {
-        linesxy$x1 <<- c(x, linesxy$x1)
-        linesxy$y1 <<- c(y, linesxy$y1)
+        ret$x1 <<- c(x, ret$x1)
+        ret$y1 <<- c(y, ret$y1)
         forward()
-        linesxy$x2 <<- c(x, linesxy$x2)
-        linesxy$y2 <<- c(y, linesxy$y2)
+        ret$x2 <<- c(x, ret$x2)
+        ret$y2 <<- c(y, ret$y2)
       }
 
       turn_right <- function() {
@@ -170,20 +82,27 @@ programming language.
       turn_left <- function() {
         alpha <<- alpha + delta
       }
+#+end_src
 
-      linesxy <- list(x1=c(),x2=c(),y1=c(),y2=c())
+We put all the functions for methods into a function lookup table.
 
+#+begin_src R :tangle lsystem-rec.r :eval no
       function_table <-
         list("F" = forward_draw,
              "f" = forward,
              "-" = turn_right,
              "+" = turn_left,
              "n" = reset)
+#+end_src  
+\newpage
 
+Now we can recure over the given string of inputs nu. If we find a
+function in the function table we call it, else we ignore the symbol.
+#+begin_src R :tangle lsystem-rec.r :eval no
       rec_over_nu <- function(nu) {
         a <- substring(nu,1,1)
         if (nu == "") {
-          linesxy
+          ret
         } else {
           if (a %in% names(function_table)) {
             function_table[[a]]()
@@ -192,169 +111,60 @@ programming language.
         }
       }
 
-      iter_over_nu <- function(nu) {
-        for (i in 1:nchar(nu)) {
-          a <- substring(nu,i,i)
-          if (a %in% names(function_table)) {
-            function_table[[a]]()
-          }
-        }
-        linesxy
-      }
-
       function(nu) {
-        iter_over_nu(nu)
+        rec_over_nu(nu)
       }
     }
-  #+end_src
+#+end_src
+\newpage
 
-  #+RESULTS:
+* Drawing the Turtle Trace
+We want a function that given the parameters name, l-system, turtle
+and number of recursions n draws the turtle traces into a png file.
 
-#+begin_src R :tangle turtle-plot.r
-  turtle_plot_png <- function(name, n, lsystem, turtle) {
-    turtle_trace  <- turtle(lsystem(n))
+#+begin_src R :tangle lsystem-rec.r :eval no
+  draw_turtle <- function(name, turtle, lsystem, n) {
+    ls <- turtle(lsystem(n))
     turtle("n")
-    rx <- range(c(turtle_trace$x1,turtle_trace$x2))
-    ry <- range(c(turtle_trace$y1,turtle_trace$y2))
+    draw_turtle_rec <- function(ls) {
+      if (length(ls$x1) == 0) {
+        return()
+      } else {
+        lines(x=c(ls$x1[1], ls$x2[1]), y=c(ls$y1[1], ls$y2[1]))
+        draw_turtle_rec(list(x1=ls$x1[-1],
+                         x2=ls$x2[-1],
+                         y1=ls$y1[-1],
+                         y2=ls$y2[-1]))
+      } 
+    }
     png(name)
-    plot(c(rx[1], rx[2]),
-         c(ry[1], ry[2]),
-         type="n",
-         ann=FALSE,
-         axes=FALSE)
-    draw_turtle_iter(turtle_trace)
+    plot(range(c(ls$x1, ls$x2)), range(c(ls$y1, ls$y2)), type="n", ann=FALSE, axes=FALSE)
+    draw_turtle_rec(ls)
     dev.off()
   }
 #+end_src
+\newpage
 
-#+RESULTS:
+After all the above was tangled into ~lsystem-rec.r~ we can evaluate
+the following lines to generate a koch curve and show it here.
 
-  #+begin_src R :tangle plotting-turtle.r
-    plotting_turtle <- function(x, y, alpha, stepsize, delta) {
-
-        forward <- function() {
-            x <<- x + stepsize * cos(alpha)
-            y <<- y + stepsize * sin(alpha)
-        }
-
-        forward_draw <- function() {
-            x1 <- x
-            y1 <- y
-            x <<- x + stepsize * cos(alpha)
-            y <<- y + stepsize * sin(alpha)
-            lines(c(x1,x),c(y1,y))
-        }
-
-        turn_right <- function() {
-            alpha <<- alpha - delta
-        }
-
-        turn_left <- function() {
-            alpha <<- alpha + delta
-        }
-
-        function_table <-
-            list("F" = forward_draw,
-                 "f" = forward,
-                 "-" = turn_right,
-                 "+" = turn_left)
-
-        iter_over_nu <- function(nu) {
-
-            for (i in 1:nchar(nu)) {
-                function_table[[substring(nu,i,i)]]()
-            }
-        }
-
-        function(nu) {
-            iter_over_nu(nu)
-        }
-    }
-
-  #+end_src
-
-  #+RESULTS:
-
-  #+begin_src R :tangle draw-turtle.r
-    draw_turtle <- function(ls) {
-        if (length(ls$x1) == 0) {
-            TRUE
-        } else {
-            lines(x=c(ls$x1[1], ls$x2[1]), y=c(ls$y1[1], ls$y2[1]))
-            draw_lines(list(x1=ls$x1[-1],
-                            x2=ls$x2[-1],
-                            y1=ls$y1[-1],
-                            y2=ls$y2[-1]))
-        }
-    }
-
-
-    draw_turtle_iter <- function(ls) {
-        for (i in 1:length(ls$x1)) {
-            lines(x=c(ls$x1[i], ls$x2[i]), y=c(ls$y1[i], ls$y2[i]))
-        }
-    }
-  #+end_src
-
-  #+RESULTS:
-
-* The Koch Curve
-  #+begin_src R :tangle koch-curve.r :eval yes
-    source("lsystem.r")
-    source("turtle.r")
-    source("draw-turtle.r")
-    dict <- c("F" = "F-F+F+FF-F-F+F", "+" = "+", "-" = "-", "f" = "f")
-    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (4))
-    t <- turtle(0,0,pi,0.03,pi/2)
-    lines <- t(l)
-    png("koch.png", width=1000, height=1000)
-    plot(range(x=c(lines$x1,lines$x2)),y=range(c(lines$y1,lines$y2)),type="n", ann=FALSE, axes=FALSE)
-    draw_turtle_iter(lines)
-    dev.off() 
-  #+end_src
-
-  #+RESULTS:
-  : 1
-
-[[file:koch.png]]
-
-* More Curves
-  #+begin_src R :tangle more-curves.r :eval query-export
-    source("lsystem-with-subscripts.r")
-    source("turtle.r")
-    source("draw-turtle.r")
-    dict <- c("F" = "FF-F-F-F-F-F+F", "+" = "+", "-" = "-", "f" = "f")
-    l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (4))
-    t <- turtle(0,0,pi,1,pi/2)
-    ls <- t(l)
-    png("more-curves-a.png", width=1000, height=1000)
-    plot(x=range(x=c(ls$x1,ls$x2)),
-         y=range(c(ls$y1,ls$y2)),
-         type="n", ann=FALSE, axes=FALSE)
-    draw_turtle_iter(ls)
-    dev.off() 
-  #+end_src
-
-  #+RESULTS:
-  : 1
-#+CAPTION: More Curves
-[[file:more-curves-a.png]]
-
-#+begin_src R :tangel more-curves.r :eval query-export
-  source("lsystem-with-subscripts.r")
-  source("turtle.r")
-  source("draw-turtle.r")
-  source("turtle-plot.r")  
-  alphabet <- c("F_r", "F_l", "f", "+", "-")
-  axiom <- "F_r"
-  dict <- c( "F_r" = "F_l-F_r-F_l", "F_l" = "F_r+F_l+F_r", "+" = "+", "-" = "-", "f" = "f")
-  l <- lsystem_iter(alphabet, axiom, dict)
-  t <- turtle(0,0,pi, 1, pi/3)
-  turtle_plot_png("sierpinski-gasket.png", 7, l, t)
+#+begin_src R :eval yes
+            source("lsystem-rec.r")
+            t <- turtle(0,0,pi,1,pi/2)
+            l <- lsystem_rec(alphabet="Ff+-",
+                             axiom="F-F-F-F",
+                             productions=c("F" = "F-F+F+FF-F-F+F",
+                                           "+" = "+",
+                                           "-" = "-",
+                                           "f" = "f"))
+            draw_turtle("koch-curve.png", t, l, 2)
 #+end_src
 
 #+RESULTS:
 : 1
+
+#+CAPTION: Koch Curve
+[[file:koch-curve.png]]
 
 * config :noexport:
 #+PROPERTY: :eval never-export
@@ -374,10 +184,10 @@ programming language.
 #+LATEX_HEADER: \usepackage{listings}
 #+LATEX_HEADER: \newfontfamily\listingsfont[Scale=0.85]{FreeSans.ttf}
 #+LATEX_HEADER: \lstset{basicstyle=\footnotesize\ttfamily, breaklines=true, frame=single, keywordstyle=\listingsfont\bfseries, stringstyle=\ttfamily, commentstyle=\ttfamily, showstringspaces=false}
-#+LATEX_HEADER: \usepackage[ngerman]{babel}
-##+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
+##+LATEX_HEADER: \usepackage[ngerman]{babel}
+#+LATEX_HEADER: \setmainfont{unicode.joanna.ttf}
 ;;#+LATEX_HEADER: \setmathfont{XITS Math}
-##+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
+#+LATEX_HEADER: \setsansfont{Vollkorn-Regular.ttf}
 #+LATEX_HEADER: \addtokomafont{pagenumber}{\small \sffamily}
 #+LATEX_HEADER: \setkomafont{author}{\sffamily}
 #+LATEX_HEADER: \setkomafont{date}{\sffamily}
