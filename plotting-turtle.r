@@ -35,7 +35,6 @@ plotting_turtle <- function(x, y, alpha, stepsize, delta) {
     }
 
     function(nu) {
-                                        # rec_over_nu(nu)
         iter_over_nu(nu)
     }
 }

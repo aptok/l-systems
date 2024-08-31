@@ -1,3 +1,7 @@
+* Introduction
+The motivation was to try out the programming patterns teached in TLS
+to reproduce the image in TABOP. To do this [[https://www.r-project.org/][R]] was the choosen
+programming language.
 * L-Systems
   #+begin_src R :tangle lsystem.r
     lsystem  <- function(alphabet, axiom, productions) {
@@ -42,6 +46,92 @@
     }
 
   #+end_src
+  #+begin_src R :tangle lsystem-with-subscripts.r
+    lsystem  <- function(alphabet, axiom, productions) {
+
+      derivation  <- function(axiom, new_word) {
+        a <- substring(axiom,1,1)
+        b <- substring(axiom,2,2)
+        c <- substring(axiom,3,3)
+        if (a  == "") {
+          new_word
+        } else if (b == "_") {
+          derivation(substring(axiom,4),
+                     paste(new_word,
+                           productions[paste(a,b,c,sep="")],
+                           sep=""))
+        }
+        else derivation(substring(axiom,2),
+                        paste(new_word,
+                              productions[a],
+                              sep=""))
+      }
+
+      derive_n  <- function(axiom, n) {
+        if (n == 0) {
+          axiom
+        } else derive_n(derivation(axiom, ""),
+                        n - 1)
+      }
+
+      function(n) {
+        derive_n(axiom, n)
+      }
+    }
+
+    symbols_in_nu <- function(nu, symlist) {
+        a <- substring(nu,1,1)
+        b <- substring(nu,2,2)
+        c <- substring(nu,3,3)
+
+        if (a == "") {
+          symlist
+        } else if (b == "_") {
+          symbols_in_nu(substring(nu,4),
+                        c(paste(a,b,c,sep=""), symlist))
+        } else {
+          symbols_in_nu(substring(nu,2),
+                        c(a, symlist))
+        }
+    }
+
+
+    symbols_in_nu_iter <- function(nu) {
+      symlist <- c()
+      for (i in 1:nchar(nu)) {
+        a <- substring(nu,i,i)
+        b <- substring(nu,i + 1,i + 1)
+        c <- substring(nu,i + 2,i + 2)
+        if (b == "_") {
+          symlist <- c(paste(a,b,c,sep=""), symlist)
+          nu <- paste(substring(nu,0,i), substring(nu,i + 3), sep="")
+        } else {
+          symlist <- c(a, symlist)
+        }
+      }
+      rev(symlist[symlist != ""])
+    }
+
+
+
+    lsystem_iter <- function(alphabet, axiom, productions) {
+      function(n) {
+        new_word <- ""
+        while (n > 0) {
+          for (symbol in symbols_in_nu_iter(axiom)) {
+            new_word  <- paste(new_word,
+                               productions[symbol],
+                               sep="")
+          }
+          n <- n - 1
+          axiom <- new_word
+          new_word <- ""
+        }
+        axiom
+      }
+    }
+
+  #+end_src
 
   #+RESULTS:
 
@@ -49,77 +139,95 @@
   #+begin_src R :tangle turtle.r
     turtle <- function(x, y, alpha, stepsize, delta) {
 
-        forward <- function() {
-            x <<- x + stepsize * cos(alpha)
-            y <<- y + stepsize * sin(alpha)
+      x_orig <- x
+      y_orig <- y
+      alpha_orig <- alpha
+
+      reset <- function() {
+        linesxy <<- list(x1=c(),x2=c(),y1=c(),y2=c())
+        x <<- x_orig
+        y <<- y_orig
+        alpha <<- alpha_orig
+      }
+
+      forward <- function() {
+        x <<- x + stepsize * cos(alpha)
+        y <<- y + stepsize * sin(alpha)
+      }
+
+      forward_draw <- function() {
+        linesxy$x1 <<- c(x, linesxy$x1)
+        linesxy$y1 <<- c(y, linesxy$y1)
+        forward()
+        linesxy$x2 <<- c(x, linesxy$x2)
+        linesxy$y2 <<- c(y, linesxy$y2)
+      }
+
+      turn_right <- function() {
+        alpha <<- alpha - delta
+      }
+
+      turn_left <- function() {
+        alpha <<- alpha + delta
+      }
+
+      linesxy <- list(x1=c(),x2=c(),y1=c(),y2=c())
+
+      function_table <-
+        list("F" = forward_draw,
+             "f" = forward,
+             "-" = turn_right,
+             "+" = turn_left,
+             "n" = reset)
+
+      rec_over_nu <- function(nu) {
+        a <- substring(nu,1,1)
+        if (nu == "") {
+          linesxy
+        } else {
+          if (a %in% names(function_table)) {
+            function_table[[a]]()
+          } 
+          rec_over_nu(substring(nu,2))
         }
+      }
 
-        forward_draw <- function() {
-            linesxy$x1 <<- c(x, linesxy$x1)
-            linesxy$y1 <<- c(y, linesxy$y1)
-            forward()
-            linesxy$x2 <<- c(x, linesxy$x2)
-            linesxy$y2 <<- c(y, linesxy$y2)
+      iter_over_nu <- function(nu) {
+        for (i in 1:nchar(nu)) {
+          a <- substring(nu,i,i)
+          if (a %in% names(function_table)) {
+            function_table[[a]]()
+          }
         }
+        linesxy
+      }
 
-        turn_right <- function() {
-            alpha <<- alpha - delta
-        }
-
-        turn_left <- function() {
-            alpha <<- alpha + delta
-        }
-
-        linesxy <- list(x1=c(),x2=c(),y1=c(),y2=c())
-
-        function_table <-
-            list("F" = forward_draw,
-                 "f" = forward,
-                 "-" = turn_right,
-                 "+" = turn_left)
-
-        rec_over_nu <- function(nu) {
-            if (nu == "") {
-                linesxy
-            } else {
-                function_table[[substring(nu,1,1)]]()
-                rec_over_nu(substring(nu,2))
-            }
-        }
-
-        iter_over_nu <- function(nu) {
-
-            for (i in 1:nchar(nu)) {
-                function_table[[substring(nu,i,i)]]()
-                }
-            linesxy
-        }
-
-        function(nu) {
-          # rec_over_nu(nu)
-            iter_over_nu(nu)
-        }
+      function(nu) {
+        iter_over_nu(nu)
+      }
     }
   #+end_src
 
   #+RESULTS:
-  #+begin_src R :tangle turtle-plot.r
-    turtle_plot <- function(name, n, delta, alphabet, axiom, dict) {
-        l <- lsystem_iter(alphabet, axiom, dict)
-        ln <- gsub("R|L", "F", l(n))
-        t <- turtle(0,0,pi,1, delta)
-        lines <- t(ln)
-        png(name, width=800, height=800)
-        plot(range(x=c(lines$x1,lines$x2)),
-             y=range(c(lines$y1,lines$y2)),
-             type="n",
-             ann=FALSE,
-             axes=FALSE)
-        draw_turtle_iter(lines)
-        dev.off()
-    }
-  #+end_src
 
+#+begin_src R :tangle turtle-plot.r
+  turtle_plot_png <- function(name, n, lsystem, turtle) {
+    turtle_trace  <- turtle(lsystem(n))
+    turtle("n")
+    rx <- range(c(turtle_trace$x1,turtle_trace$x2))
+    ry <- range(c(turtle_trace$y1,turtle_trace$y2))
+    png(name)
+    plot(c(rx[1], rx[2]),
+         c(ry[1], ry[2]),
+         type="n",
+         ann=FALSE,
+         axes=FALSE)
+    draw_turtle_iter(turtle_trace)
+    dev.off()
+  }
+#+end_src
+
+#+RESULTS:
 
   #+begin_src R :tangle plotting-turtle.r
     plotting_turtle <- function(x, y, alpha, stepsize, delta) {
@@ -159,7 +267,6 @@
         }
 
         function(nu) {
-                                            # rec_over_nu(nu)
             iter_over_nu(nu)
         }
     }
@@ -169,22 +276,22 @@
   #+RESULTS:
 
   #+begin_src R :tangle draw-turtle.r
-    draw_turtle <- function(lines) {
-        if (length(lines$x1) == 0) {
+    draw_turtle <- function(ls) {
+        if (length(ls$x1) == 0) {
             TRUE
         } else {
-            lines(x=c(lines$x1[1], lines$x2[1]), y=c(lines$y1[1], lines$y2[1]))
-            draw_lines(list(x1=lines$x1[-1],
-                            x2=lines$x2[-1],
-                            y1=lines$y1[-1],
-                            y2=lines$y2[-1]))
+            lines(x=c(ls$x1[1], ls$x2[1]), y=c(ls$y1[1], ls$y2[1]))
+            draw_lines(list(x1=ls$x1[-1],
+                            x2=ls$x2[-1],
+                            y1=ls$y1[-1],
+                            y2=ls$y2[-1]))
         }
     }
 
 
-    draw_turtle_iter <- function(lines) {
-        for (i in 1:length(lines$x1)) {
-            lines(x=c(lines$x1[i], lines$x2[i]), y=c(lines$y1[i], lines$y2[i]))
+    draw_turtle_iter <- function(ls) {
+        for (i in 1:length(ls$x1)) {
+            lines(x=c(ls$x1[i], ls$x2[i]), y=c(ls$y1[i], ls$y2[i]))
         }
     }
   #+end_src
@@ -213,18 +320,18 @@
 
 * More Curves
   #+begin_src R :tangle more-curves.r :eval query-export
-    source("lsystem.r")
+    source("lsystem-with-subscripts.r")
     source("turtle.r")
     source("draw-turtle.r")
     dict <- c("F" = "FF-F-F-F-F-F+F", "+" = "+", "-" = "-", "f" = "f")
     l <- (lsystem_iter("Ff+-", "F-F-F-F", dict) (4))
     t <- turtle(0,0,pi,1,pi/2)
-    lines <- t(l)
+    ls <- t(l)
     png("more-curves-a.png", width=1000, height=1000)
-    plot(x=range(x=c(lines$x1,lines$x2)),
-         y=range(c(lines$y1,lines$y2)),
+    plot(x=range(x=c(ls$x1,ls$x2)),
+         y=range(c(ls$y1,ls$y2)),
          type="n", ann=FALSE, axes=FALSE)
-    draw_turtle_iter(lines)
+    draw_turtle_iter(ls)
     dev.off() 
   #+end_src
 
@@ -234,22 +341,20 @@
 [[file:more-curves-a.png]]
 
 #+begin_src R :tangel more-curves.r :eval query-export
-  source("lsystem.r")
+  source("lsystem-with-subscripts.r")
   source("turtle.r")
   source("draw-turtle.r")
-  source("turtle-plot.r")
-  turtle_plot("sierpinski-gasket.png",
-              6,
-              pi/3,
-              "RL+-",
-              "R",
-              c("L" = "R+L+R",
-                "R" = "L-R-L",
-                "+" = "+",
-                "-" = "-",
-                "f" = "f"))
+  source("turtle-plot.r")  
+  alphabet <- c("F_r", "F_l", "f", "+", "-")
+  axiom <- "F_r"
+  dict <- c( "F_r" = "F_l-F_r-F_l", "F_l" = "F_r+F_l+F_r", "+" = "+", "-" = "-", "f" = "f")
+  l <- lsystem_iter(alphabet, axiom, dict)
+  t <- turtle(0,0,pi, 1, pi/3)
+  turtle_plot_png("sierpinski-gasket.png", 7, l, t)
 #+end_src
 
+#+RESULTS:
+: 1
 
 * config :noexport:
 #+PROPERTY: :eval never-export
