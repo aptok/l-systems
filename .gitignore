@@ -5,3 +5,5 @@
 *.out
 .#*
 .RData
+*ttf
+*bbl
