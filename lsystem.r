@@ -1,40 +1,33 @@
-lsystem  <- function(alphabet, axiom, productions) {
-
-    derivation  <- function(axiom, new_word) {
-        a <- substring(axiom,1,1)
-        if (a  == "") {
-            new_word
-        } else derivation(substring(axiom,2),
-                          paste(new_word,
-                                productions[a],
-                                sep=""))
-    }
-
-    derive_n  <- function(axiom, n) {
-        if (n == 0) {
-            axiom
-        } else derive_n(derivation(axiom, ""),
-                        n - 1)
-    }
-
-    function(n) {
-        derive_n(axiom, n)
-    }
+letters_in_nu <- function(nu) {
+  letters <- c()
+  while (nchar(nu) > 0) {
+    a <- substring(nu,1,1)
+    b <- substring(nu,2,2)
+    c <- substring(nu,3,3)
+    if (b == "_") {
+      letters <- c(paste(a,b,c,sep=""), letters)
+      nu <- substring(nu,4)
+    } else {
+      letters <- c(a, letters)
+      nu <- substring(nu,2)
+    }    
+  }
+  rev(letters[letters != ""])
 }
 
-lsystem_iter <- function(alphabet, axiom, productions) {
-    function(n) {
-        new_word <- ""
-        while (n > 0) {
-            for (char in as.list(strsplit(axiom,""))[[1]]) {
-                new_word  <- paste(new_word,
-                                   productions[char],
-                                   sep="")
-            }
-            n <- n - 1
-            axiom <- new_word
-            new_word <- ""
-        }
-        axiom
+lsystem <- function(alphabet, axiom, productions) {
+  function(n) {
+    new_word <- ""
+    while (n > 0) {
+      for (symbol in letters_in_nu(axiom)) {
+        new_word  <- paste(new_word,
+                           productions[symbol],
+                           sep="")
+      }
+      n <- n - 1
+      axiom <- new_word
+      new_word <- ""
     }
+    axiom
+  }
 }
